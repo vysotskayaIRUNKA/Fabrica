@@ -1,0 +1,32 @@
+import pandas as pd
+
+games_path = input().strip()
+rates_path = input().strip()
+
+games = pd.read_csv(games_path, sep=';')
+games.columns = ['game_id', 'title', 'studio']
+
+rates = pd.read_csv(rates_path, sep=';')
+rates.columns = ['game_id', 'rating']
+
+avg_ratings = rates.groupby('game_id')['rating'].mean().reset_index()
+avg_ratings.columns = ['game_id', 'avg_rating']
+
+merged = avg_ratings.merge(games, on='game_id', how='left')
+
+top3 = merged.sort_values('avg_rating', ascending=False).head(3)
+for _, row in top3.iterrows():
+    print(f"{row['title']} {row['avg_rating']:.3f}")
+
+high_rated = merged[merged['avg_rating'] > 8.0]
+
+studio_counts = (
+    high_rated
+    .groupby('studio')['game_id']
+    .nunique()
+    .reset_index()
+    .rename(columns={'game_id': 'count'})
+)
+
+best_studio = studio_counts.sort_values('count', ascending=False).iloc[0]
+print(f"{best_studio['studio']} {best_studio['count']}")

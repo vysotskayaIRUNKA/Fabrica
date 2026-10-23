@@ -1,0 +1,24 @@
+import pandas as pd
+
+papers_path = input().strip()
+links_path = input().strip()
+
+papers = pd.read_csv(papers_path, sep=';')
+links = pd.read_csv(links_path, sep=';')
+
+citations = links.groupby('reference').size().reset_index(name='citations')
+
+merged = papers.merge(citations, left_on='title', right_on='reference', how='left')
+merged['citations'] = merged['citations'].fillna(0)
+
+author_avg = (
+    merged.groupby('author')['citations']
+    .mean()
+    .reset_index()
+    .sort_values('citations', ascending=False)
+    .head(3)
+)
+
+for _, row in author_avg.iterrows():
+    print(f"{row['author']} {row['citations']:.3f}")
+    
